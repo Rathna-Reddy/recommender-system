@@ -2,23 +2,21 @@ import streamlit as st
 import pickle
 import pandas as pd
 import requests
+import feather
 
 st.title('Movie Recommender System')
 
 # Load the pickled data directly as a DataFrame
 movies = pickle.load(open('movies.pkl', 'rb'))
 
-movies_similarity = pickle.load(open('movies_similarity.pkl', 'rb'))
+movies_similarity = feather.read_dataframe('df_similarity_data.feather')
 
 
 def fetch_movie_poster(movie_id):
     response = requests.get(
         'https://api.themoviedb.org/3/movie/{}?api_key=8265bd1679663a7ea12ac168da84d2e8'.format(movie_id))
     data = response.json()
-    # st.text(data)
-    # st.text('https://api.themoviedb.org/3/movie/{}?api_key=8265bd1679663a7ea12ac168da84d2e8'.format(movie_id))
     print("poster path: " + "https://image.tmdb.org/t/p/w500/" + data['poster_path'])
-    # st.write("https://image.tmdb.org/t/p/w500/" + data['poster_path'])
     return "https://image.tmdb.org/t/p/w500/" + data['poster_path']
 
 
@@ -29,12 +27,9 @@ def recommend_similar_movies(movie):
     top_five_movies = []
     top_five_movies_posters = []
     for i in sorted_movie_list:
-        # print(movies.iloc[i[0]].title)
         movie_details = movies.iloc[i[0]]
-        # st.text(movie_details.movie_id)
         top_five_movies.append(movie_details.title)
         top_five_movies_posters.append(fetch_movie_poster(movie_details.movie_id))
-        # top_five_movies_posters.append(movie_details)
     return top_five_movies, top_five_movies_posters
 
 
@@ -42,8 +37,6 @@ selected_movie_name = st.selectbox('Search for the movie to get top 5 recommende
 
 if st.button('Recommend'):
     movies, posters = recommend_similar_movies(selected_movie_name)
-    # for r_movie in movies:
-    #     st.write(r_movie)
     col1, col2, col3, col4, col5 = st.columns(5, gap="medium")
     with col1:
         st.text(movies[0])
